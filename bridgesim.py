@@ -32,28 +32,34 @@ for b in bridge:
 while loop_running:
 
     for b in bridge:
-        b.send_message(t)
+        b.send_message(t,trace)
     t +=1
     for b in bridge:
-        b.receive_message(t)
+        b.receive_message(t,trace)
     t+=1
     for lan in lans:
         lan.clear_messages()
 
-    temp = bridge[0].current_message.split(" ")[0]
-    loop_state = list(temp == b.current_message.split(" ")[0] for b in bridge)
+    temp = bridge[0].current_best_message.split(" ")[0]
+    loop_state = list(temp == b.current_best_message.split(" ")[0] for b in bridge)
 
     if not loop_state.__contains__(False):
         for b in bridge:
-            b.send_message(t)
+            b.send_message(t,trace)
+        t +=1
+        for b in bridge:
+            b.receive_message(t,trace)
+        t+=1
+        for b in bridge:
+            b.send_message(t,trace)
         break
 
 for b in bridge:
-    res = b.name+" "
+    res = b.name+": "
     for key in b.port_type:
         res += str(key)+"-"+str(b.port_type[key])+" "
 
-    print(res)
+    print(res[:-1])
 
 
 
