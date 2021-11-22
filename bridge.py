@@ -9,7 +9,7 @@ class Bridge():
         self.previous_sent_message = ""
         self.port_type = {}
         self.assumed_root = self.name
-        self.previous_received_message = ""
+        self.received_best_message = self.name+" "+str(0)+" "+self.name
 
     def initialise_ports(self):
         for port in self.ports:
@@ -33,6 +33,7 @@ class Bridge():
                         print(str(time)+" "+self.name + " r (" + msg + ") at port " + port.name)
                     # If the root bridge index is less in message
                     if int(msg.split(" ")[0][1:]) < int(self.current_best_message.split(" ")[0][1:]):
+                        self.received_best_message = msg
                         self.current_best_message = msg.split(" ")[0] + " " + str(int(msg.split(" ")[1]) + 1) + " " + \
                                                self.name
                         self.assumed_root = msg.split(" ")[0]
@@ -47,39 +48,50 @@ class Bridge():
                     elif int(msg.split(" ")[0][1:]) == int(self.current_best_message.split(" ")[0][1:]):
                         # If the root bridge index is equal in message and distance is less
                         if int(msg.split(" ")[1]) + 1 < int(self.current_best_message.split(" ")[1]):
+                            self.received_best_message = msg
                             self.current_best_message = msg.split(" ")[0] + " " + str(int(msg.split(" ")[1]) + 1) + " " + \
                                                    self.name
                             self.assumed_root = msg.split(" ")[0]
                             #Change the port type to root
                             for key in self.port_type:
                                 if self.port_type[key] == "RP":
-                                    self.port_type[key] = "NP"
+                                    self.port_type[key] = "DP"
                             self.port_type[port.name] = "RP"
                             self.previous_received_message = msg
 
                         # If the root bridge index is equal in message and distance is equal
                         elif int(msg.split(" ")[1]) + 1 == int(self.current_best_message.split(" ")[1]):
                             # If the root bridge index is equal in message and distance is equal but sender has less index
-                            if int(msg.split(" ")[2][1:]) < int(self.current_best_message.split(" ")[2][1:]):
+                            if int(msg.split(" ")[2][1:]) < int(self.current_best_message.split(" ")[2][1:]) and msg != self.received_best_message:
+                                self.received_best_message = msg
                                 self.current_best_message = msg.split(" ")[0] + " " + str(int(msg.split(" ")[1]) + 1) + " " + \
                                                        self.name
                                 self.assumed_root = msg.split(" ")[0]
                                 for key in self.port_type:
                                     if self.port_type[key] == "RP":
+                                        for remove_port in self.ports:
+                                            if remove_port.name == key:
+                                                self.ports.remove(remove_port)
                                         self.port_type[key] = "NP"
                                 self.port_type[port.name] = "RP"
                                 self.previous_received_message = msg
-                            elif int(msg.split(" ")[2][1:]) > int(self.current_best_message.split(" ")[2][1:]):
+                            elif int(msg.split(" ")[2][1:]) > int(self.current_best_message.split(" ")[2][1:]) :
+                                self.ports.remove(port)
                                 self.port_type[port.name] = "NP"
                                 self.previous_received_message = msg
+                            elif int(msg.split(" ")[2][1:]) == int(self.current_best_message.split(" ")[2][1:]) and msg != self.received_best_message :
+                                self.ports.remove(port)
+                                self.port_type[port.name] = "NP"
+                                self.previous_received_message = msg
+                        else:
+                            if msg.split(" ")[2] == self.received_best_message.split(" ")[2]:
+                                self.ports.remove(port)
+                                self.port_type[port.name] = "NP"
+                                self.previous_received_message = msg
+                    else:
+                        self.previous_received_message = msg
 
 
-                    # else:
-                    #     if msg.split(" ")[0] == self.current_best_message.split(" ")[0] and msg.split(" ")[2] == self.current_best_message.split(" ")[2]:
-                    #         self.port_type[port.name] = "NP"
-                    #         self.ports.remove(port)
-                    #         print(str(port) + " removed")
-                    #     self.previous_received_message = msg
 
         noDP = True
         for key in self.port_type:
@@ -92,7 +104,6 @@ class Bridge():
 
 
 class Lan():
-
     def __init__(self, name):
         self.name = name
         self.messages = []
